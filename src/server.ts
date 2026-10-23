@@ -20,7 +20,7 @@ export async function startServer(options:{host?:string;port?:number;dataDir?:st
     const pathname=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`).pathname;
     if(pathname==='/healthz'){res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return}
     if(pathname==='/ice-config'){
-      void (async()=>{try{const keyId=process.env.CLOUDFLARE_TURN_KEY_ID,apiToken=process.env.CLOUDFLARE_TURN_API_TOKEN;if(!keyId||!apiToken)throw Error('TURN não configurado');const response=await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(keyId)}/credentials/generate-ice-servers`,{method:'POST',headers:{Authorization:`Bearer ${apiToken}`,'Content-Type':'application/json'},body:JSON.stringify({ttl:86400})});if(!response.ok)throw Error(`Cloudflare TURN respondeu ${response.status}`);const data=await response.json();res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(data))}catch(e){console.error('TURN credentials:',e);res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({iceServers:[{urls:'stun:stun.l.google.com:19302'}]}))}})();return
+      void (async()=>{try{const keyId=process.env.CLOUDFLARE_TURN_KEY_ID,apiToken=process.env.CLOUDFLARE_TURN_API_TOKEN;if(!keyId||!apiToken)throw Error('TURN não configurado');const response=await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(keyId)}/credentials/generate-ice-servers`,{method:'POST',headers:{Authorization:`Bearer ${apiToken}`,'Content-Type':'application/json'},body:JSON.stringify({ttl:86400})});if(!response.ok)throw Error(`Cloudflare TURN respondeu ${response.status}`);const data=await response.json();res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(data))}catch(e){console.error('TURN credentials:',e);res.writeHead(503,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:'TURN indisponível'}))}})();return
     }
     const file=pathname==='/'?'index.html':pathname.startsWith('/assets/')&&/^\/assets\/[a-zA-Z0-9._-]+$/.test(pathname)?pathname.slice(1):null;
     if(!file){res.writeHead(404);res.end('Not found');return}
@@ -94,3 +94,4 @@ export async function startServer(options:{host?:string;port?:number;dataDir?:st
 }
 
 if(require.main===module)void startServer().catch(e=>{console.error('Falha ao iniciar Orbiter:',e);process.exitCode=1});
+
