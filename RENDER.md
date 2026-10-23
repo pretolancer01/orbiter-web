@@ -2,7 +2,15 @@
 
 O projeto inclui um site que abre diretamente no navegador por HTTPS. A mesma instância entrega a interface e aceita WebSocket na porta `PORT` fornecida pelo Render. O arquivo `render.yaml` usa somente o plano gratuito, para testes.
 
-No plano gratuito, o arquivo local com contas, comunidades e mensagens é temporário. Reinícios, novos deploys e períodos de inatividade podem apagá-lo. Use contas e dados de teste. Para uso contínuo será necessário migrar o armazenamento para um banco persistente.
+No plano gratuito, o arquivo local é temporário. Para manter contas, sessões, servidores e mensagens após reinícios, configure a variável `DATABASE_URL` com uma conexão PostgreSQL persistente. O Orbiter cria a tabela `orbiter_state` automaticamente. Senhas são armazenadas como hash com salt; a conexão com o banco fica apenas no backend. Se a conexão falhar, o serviço não inicia usando dados temporários por engano.
+
+## Configurar o banco gratuito
+
+1. Crie um projeto PostgreSQL no [Neon](https://console.neon.tech/) e copie a **connection string** com `sslmode=require`. Guarde a string em segredo.
+2. No Render, abra **orbiter-web → Environment → Add Environment Variable**. Em **Key**, coloque `DATABASE_URL`; em **Value**, cole a string completa. Clique em **Save, rebuild, and deploy**.
+3. Aguarde o status **Live**. Cadastre sua conta uma vez, saia e entre novamente com o mesmo e-mail e senha. Reinicie o serviço e confirme que a conta e os servidores continuam disponíveis.
+
+As contas criadas antes de ativar o banco no Render podem já ter sido apagadas com o arquivo temporário. Nesse caso, cadastre-as uma última vez depois de configurar `DATABASE_URL`. Nunca publique a connection string no GitHub ou em capturas de tela.
 
 ## Testar localmente
 

@@ -9,11 +9,12 @@ import { Store } from './store';
 type Client={ws:WebSocket;userId:string|null;token:string|null;channelId:string|null;hits:number[]};
 const send=(ws:WebSocket,data:unknown)=>{if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify(data))};
 const clean=(v:unknown)=>typeof v==='string'?v:'';
-export function startServer(options:{host?:string;port?:number;dataDir?:string}={}){
+export async function startServer(options:{host?:string;port?:number;dataDir?:string}={}){
   const webMode=process.env.ORBITER_WEB==='1'||Boolean(process.env.RENDER);
   const host=options.host||process.env.ORBITER_HOST||(webMode?'0.0.0.0':'127.0.0.1'),port=options.port||Number(process.env.PORT||process.env.ORBITER_PORT||8765);
   if(!Number.isInteger(port)||port<1||port>65535)throw Error('ORBITER_PORT inválida');
   const store=new Store(options.dataDir||process.env.ORBITER_DATA_DIR||path.join(process.cwd(),'data'));
+  await store.initPersistence();
   const webRoot=path.join(__dirname,'ui');
   const webServer=webMode?createHttpServer((req,res)=>{
     const pathname=new URL(req.url||'/',`http://${req.headers.host||'localhost'}`).pathname;
@@ -79,16 +80,17 @@ export function startServer(options:{host?:string;port?:number;dataDir?:string}=
       default:throw Error('Ação desconhecida.');
     }
     if(['select_channel','leave_channel','logout','delete_channel','delete_server','kick_member','ban_member'].includes(msg.type)){pruneChannels();broadcastPresence();}
+    await store.flush();
     result(c,id,out);
   }catch(e){error(c,id,e)}}
   wss.on('connection',ws=>{const client:Client={ws,userId:null,token:null,channelId:null,hits:[]};clients.add(client);ws.on('message',raw=>{let msg:any;try{msg=JSON.parse(raw.toString())}catch{return}if(!msg||typeof msg.type!=='string')return;const now=Date.now();client.hits=client.hits.filter(t=>now-t<10000);client.hits.push(now);if(client.hits.length>60){ws.close(4008,'Limite de mensagens');return}void handle(client,msg)});ws.on('close',()=>{leaveChannel(client);clients.delete(client);broadcastPresence()});});
   wss.on('error',e=>{if((e as NodeJS.ErrnoException).code!=='EADDRINUSE')console.error('Servidor:',e)});
   wss.on('listening',()=>console.log(`Orbiter backend: ws://${host}:${port}`));
   const oauthPort=Number(process.env.ORBITER_OAUTH_PORT||8766);
-  const http=oauth?createHttpServer(async(req,res)=>{try{const url=new URL(req.url||'/',`http://127.0.0.1:${oauthPort}`);if(url.pathname!=='/oauth2/callback')throw Error('Rota não encontrada.');const state=url.searchParams.get('state')||'',record=pending.get(state);pending.delete(state);if(!record||record.client.ws.readyState!==WebSocket.OPEN||Date.now()-record.at>600000||!url.searchParams.get('code'))throw Error('Login expirado ou inválido.');const {tokens}=await oauth.getToken({code:url.searchParams.get('code')!,codeVerifier:record.verifier,redirect_uri:redirectUri});if(!tokens.id_token)throw Error('Identidade Google ausente.');const ticket=await oauth.verifyIdToken({idToken:tokens.id_token,audience:googleClientId});const payload=ticket.getPayload();if(!payload?.sub||!payload.email||!payload.email_verified)throw Error('E-mail Google não verificado.');const account=store.googleLogin(payload.sub,payload.email,payload.name||'Conta Google');const token=store.newSession(account.id);record.client.userId=account.id;record.client.token=token;send(record.client.ws,{type:'google_auth',token,user:store.publicAccount(account)});stateFor(record.client);res.writeHead(200,{'content-type':'text/html; charset=utf-8'});res.end('<h1>Entrada concluída</h1><p>Você pode voltar ao Orbiter.</p>');}catch(e){res.writeHead(400,{'content-type':'text/plain; charset=utf-8'});res.end(e instanceof Error?e.message:'Falha de autenticação');}}):null;
+  const http=oauth?createHttpServer(async(req,res)=>{try{const url=new URL(req.url||'/',`http://127.0.0.1:${oauthPort}`);if(url.pathname!=='/oauth2/callback')throw Error('Rota não encontrada.');const state=url.searchParams.get('state')||'',record=pending.get(state);pending.delete(state);if(!record||record.client.ws.readyState!==WebSocket.OPEN||Date.now()-record.at>600000||!url.searchParams.get('code'))throw Error('Login expirado ou inválido.');const {tokens}=await oauth.getToken({code:url.searchParams.get('code')!,codeVerifier:record.verifier,redirect_uri:redirectUri});if(!tokens.id_token)throw Error('Identidade Google ausente.');const ticket=await oauth.verifyIdToken({idToken:tokens.id_token,audience:googleClientId});const payload=ticket.getPayload();if(!payload?.sub||!payload.email||!payload.email_verified)throw Error('E-mail Google não verificado.');const account=store.googleLogin(payload.sub,payload.email,payload.name||'Conta Google');const token=store.newSession(account.id);await store.flush();record.client.userId=account.id;record.client.token=token;send(record.client.ws,{type:'google_auth',token,user:store.publicAccount(account)});stateFor(record.client);res.writeHead(200,{'content-type':'text/html; charset=utf-8'});res.end('<h1>Entrada concluída</h1><p>Você pode voltar ao Orbiter.</p>');}catch(e){res.writeHead(400,{'content-type':'text/plain; charset=utf-8'});res.end(e instanceof Error?e.message:'Falha de autenticação');}}):null;
   if(http){http.listen(oauthPort,'127.0.0.1');http.on('error',e=>console.error('OAuth callback:',e));}
   if(host!=='127.0.0.1'&&host!=='localhost')console.warn('Use TLS/WSS e proxy reverso para acesso externo.');
   return {wss,http,webServer,store};
 }
 
-if(require.main===module)startServer();
+if(require.main===module)void startServer().catch(e=>{console.error('Falha ao iniciar Orbiter:',e);process.exitCode=1});

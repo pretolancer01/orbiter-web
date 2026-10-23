@@ -21,5 +21,6 @@ export class RtcRoom {
   stopShare(){if(!this.screen)return;this.screen.getTracks().forEach(t=>t.stop());this.screen=null;this.sync();this.status('Transmissão encerrada.')}
   async share(id:string,audio:boolean,height:number,fps:number,select:(id:string,audio:boolean)=>Promise<boolean>){if(!await select(id,audio))throw Error('Fonte inválida.');this.screen=await navigator.mediaDevices.getDisplayMedia({video:{height:{ideal:height},frameRate:{ideal:fps}},audio});this.screen.getVideoTracks()[0].onended=()=>this.stopShare();this.sync();this.status('Você está compartilhando. Use o botão vermelho para encerrar.');return this.screen}
   get sharing(){return !!this.screen}
+  get micOn(){return !!this.mic}
   shutdown(){this.clear();this.stopShare();this.mic?.getTracks().forEach(t=>t.stop());this.mic=null}
 }

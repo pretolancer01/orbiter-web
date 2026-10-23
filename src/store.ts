@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { Pool } from 'pg';
 
 export type Account = {id:string;email:string;username:string;displayName:string;avatar:string;bio:string;status:'online'|'away'|'busy'|'invisible';settings:{notifications:boolean};passwordSalt?:string;passwordHash?:string;googleSub?:string;createdAt:number};
 export type Community = {id:string;name:string;description:string;icon:string;privacy:'invite'|'approval';rules:string;ownerId:string;createdAt:number};
@@ -16,9 +17,11 @@ const fresh=():Data=>({version:1,accounts:[],communities:[],channels:[],categori
 const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
 const compact=(value:unknown,max:number)=>typeof value==='string'?value.trim().slice(0,max):'';
 export class Store {
-  data:Data; file:string;
+  data:Data; file:string; private pool:Pool|null=null; private pending:Promise<void>=Promise.resolve();
   constructor(dir:string){mkdirSync(dir,{recursive:true});this.file=path.join(dir,'orbiter.json');this.data=existsSync(this.file)?JSON.parse(readFileSync(this.file,'utf8')):fresh();}
-  save(){const temporary=`${this.file}.${process.pid}.tmp`;writeFileSync(temporary,JSON.stringify(this.data),{mode:0o600});renameSync(temporary,this.file);}
+  async initPersistence(){const url=process.env.DATABASE_URL;if(!url)return;const hostname=new URL(url).hostname;this.pool=new Pool({connectionString:url,max:2,ssl:['localhost','127.0.0.1'].includes(hostname)?false:{rejectUnauthorized:true}});await this.pool.query('CREATE TABLE IF NOT EXISTS orbiter_state (id integer PRIMARY KEY CHECK (id = 1), data jsonb NOT NULL)');const result=await this.pool.query<{data:Data}>('SELECT data FROM orbiter_state WHERE id = 1');if(result.rows.length)this.data=result.rows[0].data;else await this.pool.query('INSERT INTO orbiter_state (id,data) VALUES (1,$1::jsonb)',[JSON.stringify(this.data)]);}
+  save(){if(this.pool){const snapshot=JSON.stringify(this.data);this.pending=this.pending.catch(()=>{}).then(async()=>{await this.pool!.query('INSERT INTO orbiter_state (id,data) VALUES (1,$1::jsonb) ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data',[snapshot]);});return}const temporary=`${this.file}.${process.pid}.tmp`;writeFileSync(temporary,JSON.stringify(this.data),{mode:0o600});renameSync(temporary,this.file);}
+  async flush(){await this.pending;}
   publicAccount(a:Account){const {passwordSalt,passwordHash,googleSub,email,...rest}=a;return {...rest,email};}
   publicProfile(a:Account){const {email,...profile}=this.publicAccount(a);return profile;}
   account(id:string){return this.data.accounts.find(a=>a.id===id);}
