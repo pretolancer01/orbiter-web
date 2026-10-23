@@ -46,7 +46,31 @@ try{
   await pages[1].locator('#action-confirm').click();
   await pages[1].locator('#action-fields input').first().fill(invite);
   await pages[1].locator('#action-confirm').click();
-  for(const p of pages){await p.locator('#voice-channels .channel').first().click();await p.locator('#mic-btn').click()}
+  for(const p of pages){await p.setViewportSize({width:1366,height:768});await p.locator('#voice-channels .channel').first().click();await p.locator('#mic-btn').click()}
+  assert.equal(await pages[0].locator('.conversation').isVisible(),false);
+  assert.equal(await pages[0].locator('#call-stage').isVisible(),true);
+  await pages[0].locator('#chat-toggle').click();
+  assert.equal(await pages[0].locator('.conversation').isVisible(),true);
+  const layout=await pages[0].evaluate(()=>({pageScroll:document.documentElement.scrollHeight>innerHeight,stage:document.querySelector('#call-stage').getBoundingClientRect().width,controls:document.querySelector('#mic-btn').getBoundingClientRect().bottom}));
+  assert.equal(layout.pageScroll,false);
+  assert.ok(layout.stage>250);
+  assert.ok(layout.controls<768);
+  await pages[0].locator('#chat-toggle').click();
+  await pages[0].locator('#voice-channels .channel-chat').first().click();
+  assert.equal(await pages[0].locator('.conversation').isVisible(),true);
+  await pages[0].locator('#voice-channels .channel-chat').first().click();
+  assert.equal(await pages[0].locator('.conversation').isVisible(),false);
+  await pages[0].locator('#audio-tab').click();
+  assert.equal(await pages[0].locator('#audio-panel').isVisible(),true);
+  if(process.env.ORBITER_UI_PREVIEW){await pages[0].locator('#toast').waitFor({state:'hidden',timeout:7000});await pages[0].screenshot({path:resolve(process.env.ORBITER_UI_PREVIEW)})}
+  const audioLayout=await pages[0].evaluate(()=>{const panel=document.querySelector('#audio-panel');return {needsScroll:panel.scrollHeight>panel.clientHeight,lastControl:document.querySelector('#mic-test-status').getBoundingClientRect().bottom,viewport:innerHeight}});
+  assert.equal(audioLayout.needsScroll,false);
+  assert.ok(audioLayout.lastControl<audioLayout.viewport);
+  await pages[0].locator('#mic-sensitivity').fill('80');
+  assert.equal(await pages[0].locator('#sensitivity-value').textContent(),'80%');
+  await pages[0].locator('#noise-filter').uncheck();
+  await pages[0].locator('#noise-filter').check();
+  await pages[0].locator('#members-tab').click();
   await pages[0].waitForFunction(()=>document.querySelector('#remote-media audio')?.srcObject?.getAudioTracks().length>0,null,{timeout:15000});
   await pages[1].waitForFunction(()=>document.querySelector('#remote-media audio')?.srcObject?.getAudioTracks().length>0,null,{timeout:15000});
   await new Promise(r=>setTimeout(r,2000));
@@ -58,4 +82,13 @@ try{
     assert.ok(status.bytesReceived.some(bytes=>bytes>0));
     if(relayOnly)assert.equal(status.localCandidateType,'relay');
   }
+  await pages[1].evaluate(async()=>{const stream=await navigator.mediaDevices.getUserMedia({video:true});window.__testVideo=stream;window.__pcs[0].addTrack(stream.getVideoTracks()[0],stream)});
+  await pages[0].locator('#remote-media video').waitFor({state:'visible',timeout:15000});
+  const videoLayout=await pages[0].evaluate(()=>{const stage=document.querySelector('#call-stage').getBoundingClientRect(),video=document.querySelector('#remote-media video').getBoundingClientRect();return {withinStage:video.left>=stage.left&&video.right<=stage.right&&video.bottom<=stage.bottom,large:video.width>300&&video.height>250}});
+  assert.equal(videoLayout.withinStage,true);
+  assert.equal(videoLayout.large,true);
+  await pages[0].locator('#logout-btn').click();
+  await pages[0].locator('#auth').waitFor({state:'visible'});
+  await pages[0].reload();
+  await pages[0].locator('#auth').waitFor({state:'visible'});
 }finally{await browser?.close();child.kill();await rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:100})}
