@@ -26,7 +26,7 @@ export async function startServer(options:{host?:string;port?:number;dataDir?:st
     if(!file){res.writeHead(404);res.end('Not found');return}
     const absolute=path.join(webRoot,file);
     if(!existsSync(absolute)||!statSync(absolute).isFile()){res.writeHead(404);res.end('Not found');return}
-    const type=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.js')?'text/javascript; charset=utf-8':file.endsWith('.css')?'text/css; charset=utf-8':'application/octet-stream';
+    const type=file.endsWith('.html')?'text/html; charset=utf-8':file.endsWith('.js')?'text/javascript; charset=utf-8':file.endsWith('.css')?'text/css; charset=utf-8':file.endsWith('.png')?'image/png':'application/octet-stream';
     res.writeHead(200,{'content-type':type,'x-content-type-options':'nosniff','cache-control':file==='index.html'?'no-store':'public, max-age=31536000, immutable'});
     createReadStream(absolute).pipe(res);
   }):null;

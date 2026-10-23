@@ -257,3 +257,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .toast{top:66px;bottom:auto;left:12px;right:12px;max-width:none;padding:10px 13px;font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}::view-transition-old(root),::view-transition-new(root){animation-duration:.01ms!important}}
+.loading img{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 10px 24px #0008)}
+.auth-side .logo{border:0;background:transparent;width:78px;height:78px}
+.auth-side .logo img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 14px 30px #0007)}
+.rail .brand{border:0;background:transparent;box-shadow:none}
+.rail .brand:after{display:none}
+.rail .brand img{display:block;width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 9px 15px #0007)}
+.topbar #channel-icon.brand-mark{display:inline-block;width:27px;height:27px;flex:none;background:url('./orbiter-icon.png') center/contain no-repeat}
+.home-glow span{display:block;width:140px;height:140px;background:url('./orbiter-icon.png') center/contain no-repeat;font-size:0;filter:drop-shadow(0 14px 24px #0007)}
+.settings-brand{display:flex;align-items:center;gap:9px}
+.settings-brand:before{content:'';display:inline-block;width:27px;height:27px;flex:none;background:url('./orbiter-icon.png') center/contain no-repeat}
+@media(max-width:720px){.auth-side .logo{width:52px;height:52px}.home-glow span{display:none}}

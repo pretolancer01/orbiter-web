@@ -3,6 +3,7 @@ if (!(window as any).orbita) {
   const sessionKey='orbiter-web-session';
   (window as any).orbita={
     backendUrl:async()=>`${location.protocol==='https:'?'wss':'ws'}://${location.host}`,
+    iceConfig:async()=>{const response=await fetch('/ice-config',{cache:'no-store'});if(!response.ok)throw Error(`TURN indisponível (${response.status})`);return response.json()},
     readSession:async()=>localStorage.getItem(sessionKey),
     writeSession:async(token:string)=>{localStorage.setItem(sessionKey,token);return true},
     clearSession:async()=>{localStorage.removeItem(sessionKey)},

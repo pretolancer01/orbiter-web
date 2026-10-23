@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('orbita', {
   backendUrl: (): Promise<string> => ipcRenderer.invoke('backend:url'),
+  iceConfig: (): Promise<{iceServers:RTCIceServer[]}> => ipcRenderer.invoke('ice:config'),
   readSession: (): Promise<string|null> => ipcRenderer.invoke('session:read'),
   writeSession: (token:string): Promise<boolean> => ipcRenderer.invoke('session:write',token),
   clearSession: (): Promise<void> => ipcRenderer.invoke('session:clear'),

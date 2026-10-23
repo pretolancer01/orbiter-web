@@ -30,7 +30,9 @@ Abra `http://127.0.0.1:8890`. Para teste local, os dados padrão ficam em `data/
 2. No Render, crie um Blueprint a partir desse repositório. Ele encontra `render.yaml` na raiz. Verifique que o plano exibido é **Free** e não há disco antes de criar.
 3. Depois da implantação, abra a URL `https://...onrender.com`, cadastre uma conta de teste e crie uma comunidade. Compartilhe essa URL com seu amigo; ele cria outra conta de teste e usa o convite da comunidade.
 
-O login Google permanece desabilitado no navegador até ter callback OAuth público e credenciais próprias. Microfone e captura de tela usam as permissões e o seletor do navegador. Conectividade WebRTC entre redes diferentes ainda pode exigir TURN; vídeo e áudio remotos precisam de teste em dois computadores. O serviço gratuito pode demorar a despertar após inatividade. A implantação no Render não foi executada nesta etapa.
+O login Google permanece desabilitado no navegador até ter callback OAuth público e credenciais próprias. Microfone e captura de tela usam as permissões e o seletor do navegador. Para voz e tela entre redes diferentes, configure no Render `CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`; o backend fornece credenciais TURN temporárias ao navegador e ao executável. O serviço gratuito pode demorar a despertar após inatividade.
+
+O executável portátil `Orbiter 0.2.3.exe` abre a mesma conta e comunidades do site automaticamente. Não é necessário copiar a URL do Render para o computador. O login precisa ser feito uma vez também no executável.
 
 ## Testar no celular
 

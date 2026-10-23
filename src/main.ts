@@ -4,12 +4,22 @@ import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 
 type PendingCapture = { id: string; audio: boolean; at: number };
 const pending = new Map<number, PendingCapture>();
+const localServer = process.env.ORBITER_LOCAL_SERVER === '1';
+const backendUrl = process.env.ORBITER_SERVER_URL || (localServer ? 'ws://127.0.0.1:8765' : 'wss://orbiter-web.onrender.com');
 
 app.whenReady().then(() => {
   const dataDir = app.getPath('userData');
-  require(path.join(__dirname, 'server.cjs')).startServer({ dataDir });
+  if (localServer) void require(path.join(__dirname, 'server.cjs')).startServer({ dataDir }).catch(console.error);
   const sessionPath = path.join(dataDir, 'session.bin');
-  ipcMain.handle('backend:url', () => process.env.ORBITER_SERVER_URL || 'ws://127.0.0.1:8765');
+  ipcMain.handle('backend:url', () => backendUrl);
+  ipcMain.handle('ice:config', async () => {
+    const endpoint = new URL(backendUrl);
+    if (endpoint.protocol !== 'ws:' && endpoint.protocol !== 'wss:') throw Error('Endereço do servidor inválido.');
+    const protocol = endpoint.protocol === 'wss:' ? 'https:' : 'http:';
+    const response = await fetch(`${protocol}//${endpoint.host}/ice-config`, { signal: AbortSignal.timeout(30000), cache: 'no-store' });
+    if (!response.ok) throw Error(`TURN indisponível (${response.status}).`);
+    return response.json();
+  });
   ipcMain.handle('session:read', () => {
     if (!safeStorage.isEncryptionAvailable() || !existsSync(sessionPath)) return null;
     try { return safeStorage.decryptString(readFileSync(sessionPath)); } catch { return null; }
@@ -46,6 +56,7 @@ app.whenReady().then(() => {
   const win = new BrowserWindow({
     width: 1440, height: 900, minWidth: 1000, minHeight: 650,
     backgroundColor: '#101b24',
+    icon: path.join(__dirname, '..', 'build', 'icon.ico'),
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
   });
   win.webContents.setWindowOpenHandler(({ url }) => {

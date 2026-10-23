@@ -1,6 +1,6 @@
 {
   "name": "orbiter-desktop",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "description": "Cliente independente de comunicação em tempo real",
   "main": "dist/main.cjs",
@@ -37,10 +37,12 @@
       "dist/preload.cjs",
       "dist/server.cjs",
       "dist/ui/**/*",
+      "build/icon.ico",
       "package.json"
     ],
     "asar": true,
     "win": {
+      "icon": "build/icon.ico",
       "target": "portable"
     }
   }
