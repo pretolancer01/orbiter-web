@@ -1,0 +1,44 @@
+{
+  "name": "orbiter-desktop",
+  "version": "0.2.2",
+  "private": true,
+  "description": "Cliente independente de comunicação em tempo real",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "npm run build && electron .",
+    "server": "npm run build && node dist/server.cjs",
+    "web": "node dist/server.cjs",
+    "web:dev": "npm run build && node dist/server.cjs",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "pack": "npm run build && electron-builder --win portable"
+  },
+  "dependencies": {
+    "google-auth-library": "^10.0.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.1",
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0"
+  },
+  "build": {
+    "appId": "dev.orbita.desktop",
+    "productName": "Orbiter",
+    "files": [
+      "dist/main.cjs",
+      "dist/preload.cjs",
+      "dist/server.cjs",
+      "dist/ui/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": "portable"
+    }
+  }
+}

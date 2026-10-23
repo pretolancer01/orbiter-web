@@ -1,0 +1,11 @@
+import WebSocket from 'ws';
+const port=process.argv[2]||'9228';
+const targets=await(await fetch(`http://127.0.0.1:${port}/json`)).json();
+const page=targets.find(t=>t.type==='page'&&t.title==='Orbiter');
+if(!page)throw Error('Janela Orbiter ausente');
+const ws=new WebSocket(page.webSocketDebuggerUrl);await new Promise(r=>ws.once('open',r));
+ws.on('message',raw=>{const msg=JSON.parse(raw.toString());if(msg.id)console.log(JSON.stringify(msg).slice(0,3000));else if(msg.method==='Runtime.consoleAPICalled'||msg.method==='Runtime.exceptionThrown')console.log(JSON.stringify(msg).slice(0,3000))});
+ws.send(JSON.stringify({id:1,method:'Runtime.enable'}));
+ws.send(JSON.stringify({id:2,method:'Runtime.evaluate',params:{expression:'window.orbita.backendUrl()',awaitPromise:true,returnByValue:true}}));
+ws.send(JSON.stringify({id:3,method:'Runtime.evaluate',params:{expression:"new Promise(resolve=>{const s=new WebSocket('ws://127.0.0.1:8765');s.onopen=()=>{s.close();resolve('open')};s.onerror=e=>resolve('error '+String(e.type));setTimeout(()=>resolve('timeout'),3000)})",awaitPromise:true,returnByValue:true}}));
+setTimeout(()=>ws.close(),4500);

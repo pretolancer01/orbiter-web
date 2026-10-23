@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: orbiter-web
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run web
+    healthCheckPath: /healthz
+    envVars:
+      - key: ORBITER_WEB
+        value: "1"
