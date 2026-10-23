@@ -1,10 +1,11 @@
 export type Signal={description?:RTCSessionDescriptionInit;candidate?:RTCIceCandidateInit};
 type Peer={pc:RTCPeerConnection;polite:boolean;makingOffer:boolean;ignoreOffer:boolean;pending:RTCIceCandidateInit[];stream:MediaStream};
 export class RtcRoom {
-  private peers=new Map<string,Peer>();private mic:MediaStream|null=null;private screen:MediaStream|null=null;
+  private peers=new Map<string,Peer>();private mic:MediaStream|null=null;private screen:MediaStream|null=null;private iceServers:RTCIceServer[]=[{urls:'stun:stun.l.google.com:19302'}];
   constructor(private selfId:()=>string,private send:(to:string,data:Signal)=>void,private media:(id:string,stream:MediaStream|null)=>void,private status:(text:string)=>void){}
+  configureIceServers(servers:RTCIceServer[]){this.iceServers=servers;for(const peer of this.peers.values())peer.pc.setConfiguration({iceServers:servers})}
   private tracks(){return [...(this.mic?.getTracks()||[]),...(this.screen?.getTracks()||[])].filter(t=>t.readyState==='live')}
-  private create(id:string){const existing=this.peers.get(id);if(existing)return existing;const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});const peer:Peer={pc,polite:this.selfId()>id,makingOffer:false,ignoreOffer:false,pending:[],stream:new MediaStream()};this.peers.set(id,peer);
+  private create(id:string){const existing=this.peers.get(id);if(existing)return existing;const pc=new RTCPeerConnection({iceServers:this.iceServers});const peer:Peer={pc,polite:this.selfId()>id,makingOffer:false,ignoreOffer:false,pending:[],stream:new MediaStream()};this.peers.set(id,peer);
     for(const track of this.tracks())pc.addTrack(track,track.kind==='video'?this.screen!:this.mic?.getTracks().includes(track)?this.mic!:this.screen!);
     pc.onicecandidate=e=>{if(e.candidate)this.send(id,{candidate:e.candidate.toJSON()})};
     pc.onnegotiationneeded=async()=>{try{peer.makingOffer=true;await pc.setLocalDescription();this.send(id,{description:pc.localDescription!})}catch(e){console.error(e)}finally{peer.makingOffer=false}};

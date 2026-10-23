@@ -31,6 +31,7 @@ function handleMessage(msg:any){if(msg.type==='result'){const item=pending.get(m
   if(msg.type==='peer_left'){rtc.remove(msg.id);renderMembers()}
 }
 async function connectBackend(){try{
+  if(location.protocol==='https:'){try{const response=await fetch('/ice-config',{cache:'no-store'});if(response.ok){const config=await response.json();if(Array.isArray(config.iceServers))rtc.configureIceServers(config.iceServers)}}catch(error){console.warn('TURN não carregado; usando STUN.',error)}}
   const url=await window.orbita.backendUrl();
   for(let attempt=0;attempt<20;attempt++){
     const candidate=new WebSocket(url);
