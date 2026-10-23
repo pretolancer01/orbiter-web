@@ -32,4 +32,10 @@ Abra `http://127.0.0.1:8890`. Para teste local, os dados padrão ficam em `data/
 
 O login Google permanece desabilitado no navegador até ter callback OAuth público e credenciais próprias. Microfone e captura de tela usam as permissões e o seletor do navegador. Conectividade WebRTC entre redes diferentes ainda pode exigir TURN; vídeo e áudio remotos precisam de teste em dois computadores. O serviço gratuito pode demorar a despertar após inatividade. A implantação no Render não foi executada nesta etapa.
 
+## Testar no celular
+
+Abra a mesma URL HTTPS do Orbiter no navegador do celular, entre com outra conta e use o convite da comunidade. Abra o menu ☰, escolha o canal de voz e feche o menu. Quando alguém compartilhar a tela pelo computador, a transmissão aparece na área central; toque em **Tela cheia** para ampliar. Se o navegador bloquear o som automático, toque em **Ativar som** no cartão da transmissão. O chat e a lista de membros ficam em botões separados no cabeçalho.
+
+O fluxo de recepção de vídeo foi testado com um navegador emulado como celular. Faça também um teste em um aparelho real e em duas redes antes de considerar a experiência validada. A captura da própria tela pelo celular depende do suporte do navegador; nesta versão, o objetivo móvel é assistir à transmissão do computador.
+
 Referências: https://render.com/docs/web-services , https://render.com/docs/websocket , https://render.com/docs/disks

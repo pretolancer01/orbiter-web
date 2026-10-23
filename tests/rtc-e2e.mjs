@@ -2,13 +2,15 @@ import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { once } from 'node:events';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import assert from 'node:assert/strict';
 
 const probe=createServer();probe.listen(0,'127.0.0.1');await once(probe,'listening');const port=probe.address().port;probe.close();await once(probe,'close');
 const dir=await mkdtemp(join(tmpdir(),'orbiter-rtc-'));
+const previewDir=process.env.ORBITER_UI_PREVIEW_DIR?resolve(process.env.ORBITER_UI_PREVIEW_DIR):null;
+if(previewDir)await mkdir(previewDir,{recursive:true});
 const child=spawn(process.execPath,[resolve('dist/server.cjs')],{env:{...process.env,ORBITER_WEB:'1',PORT:String(port),ORBITER_DATA_DIR:dir,DATABASE_URL:'',GOOGLE_CLIENT_ID:''},stdio:['ignore','pipe','pipe']});
 const relayOnly=process.env.ORBITER_TEST_RELAY==='1';
 const liveIce=relayOnly?await (await fetch('https://orbiter-web.onrender.com/ice-config')).json():null;
@@ -31,6 +33,8 @@ try{
     await page.locator('#auth-submit').click();
     await page.locator('#app').waitFor({state:'visible'});
   }
+  assert.equal(await pages[0].locator('.home-hero').isVisible(),true);
+  if(previewDir){await pages[0].locator('#toast').waitFor({state:'hidden',timeout:8000});await pages[0].screenshot({path:join(previewDir,'home-desktop.png')})}
   await pages[0].locator('#create-server-btn').click();
   await pages[0].locator('#action-confirm').click();
   await pages[0].locator('#action-fields input').first().fill('Sala de teste');
@@ -47,6 +51,11 @@ try{
   await pages[1].locator('#action-fields input').first().fill(invite);
   await pages[1].locator('#action-confirm').click();
   for(const p of pages){await p.setViewportSize({width:1366,height:768});await p.locator('#voice-channels .channel').first().click();await p.locator('#mic-btn').click()}
+  await pages[0].locator('#voice-channels .channel').first().click({button:'right'});
+  assert.equal(await pages[0].locator('#app-context-menu').isVisible(),true);
+  assert.equal(await pages[0].locator('#app-context-menu').getByRole('menuitem',{name:'Abrir chat'}).isVisible(),true);
+  await pages[0].keyboard.press('Escape');
+  assert.equal(await pages[0].locator('#app-context-menu').isVisible(),false);
   assert.equal(await pages[0].locator('.conversation').isVisible(),false);
   assert.equal(await pages[0].locator('#call-stage').isVisible(),true);
   await pages[0].locator('#chat-toggle').click();
@@ -56,6 +65,7 @@ try{
   assert.ok(layout.stage>250);
   assert.ok(layout.controls<768);
   await pages[0].locator('#chat-toggle').click();
+  if(previewDir)await pages[0].screenshot({path:join(previewDir,'call-desktop.png')});
   await pages[0].locator('#voice-channels .channel-chat').first().click();
   assert.equal(await pages[0].locator('.conversation').isVisible(),true);
   await pages[0].locator('#voice-channels .channel-chat').first().click();
@@ -95,11 +105,57 @@ try{
     assert.ok(status.bytesReceived.some(bytes=>bytes>0));
     if(relayOnly)assert.equal(status.localCandidateType,'relay');
   }
-  await pages[1].evaluate(async()=>{const stream=await navigator.mediaDevices.getUserMedia({video:true});window.__testVideo=stream;window.__pcs[0].addTrack(stream.getVideoTracks()[0],stream)});
+  const mobileContext=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,permissions:['microphone','camera']});
+  if(liveIce)await mobileContext.route(`http://127.0.0.1:${port}/ice-config`,route=>route.fulfill({json:liveIce}));
+  await mobileContext.addInitScript(relay=>{const Base=window.RTCPeerConnection;window.__pcs=[];window.RTCPeerConnection=class extends Base{constructor(config){super(relay?{...config,iceTransportPolicy:'relay'}:config);window.__pcs.push(this)}}},relayOnly);
+  const mobile=await mobileContext.newPage();
+  mobile.on('pageerror',e=>console.log('mobile page error',e.message));
+  await mobile.goto(`http://127.0.0.1:${port}/`);
+  await mobile.locator('#auth-switch').click();
+  await mobile.locator('#display-input').fill('Teste mobile');
+  await mobile.locator('#username-input').fill('testemobile');
+  await mobile.locator('#email-input').fill('mobile@example.test');
+  await mobile.locator('#password-input').fill('teste12345');
+  await mobile.locator('#auth-submit').click();
+  await mobile.locator('#app').waitFor({state:'visible'});
+  await mobile.locator('#create-server-btn').click();
+  await mobile.locator('#action-fields select').selectOption('join');
+  await mobile.locator('#action-confirm').click();
+  await mobile.locator('#action-fields input').first().fill(invite);
+  await mobile.locator('#action-confirm').click();
+  await mobile.locator('#mobile-menu-btn').click();
+  await mobile.locator('#voice-channels .channel').first().click();
+  await pages[1].waitForFunction(()=>window.__pcs.length>=2,null,{timeout:15000});
+  await pages[1].evaluate(async()=>{const stream=await navigator.mediaDevices.getUserMedia({video:true});window.__testVideo=stream;for(const pc of window.__pcs)pc.addTrack(stream.getVideoTracks()[0],stream)});
   await pages[0].locator('#remote-media video').waitFor({state:'visible',timeout:15000});
+  await mobile.locator('#remote-media video').waitFor({state:'visible',timeout:15000});
   const videoLayout=await pages[0].evaluate(()=>{const stage=document.querySelector('#call-stage').getBoundingClientRect(),video=document.querySelector('#remote-media video').getBoundingClientRect();return {withinStage:video.left>=stage.left&&video.right<=stage.right&&video.bottom<=stage.bottom,large:video.width>300&&video.height>250}});
   assert.equal(videoLayout.withinStage,true);
   assert.equal(videoLayout.large,true);
+  const mobileLayout=await mobile.evaluate(()=>{
+    const stage=document.querySelector('#call-stage').getBoundingClientRect();
+    const video=document.querySelector('#remote-media video').getBoundingClientRect();
+    const controls=document.querySelector('#share-btn').getBoundingClientRect();
+    return {pageWidth:document.documentElement.scrollWidth,viewport:innerWidth,pageHeight:document.documentElement.scrollHeight,viewportHeight:innerHeight,stageLeft:stage.left,stageRight:stage.right,videoLeft:video.left,videoRight:video.right,videoHeight:video.height,controlsBottom:controls.bottom};
+  });
+  assert.ok(mobileLayout.pageWidth<=mobileLayout.viewport,JSON.stringify(mobileLayout));
+  assert.ok(mobileLayout.pageHeight<=mobileLayout.viewportHeight,JSON.stringify(mobileLayout));
+  assert.ok(mobileLayout.videoLeft>=0&&mobileLayout.videoRight<=mobileLayout.viewport,JSON.stringify(mobileLayout));
+  assert.ok(mobileLayout.videoHeight>150,JSON.stringify(mobileLayout));
+  assert.ok(mobileLayout.controlsBottom<=mobileLayout.viewportHeight-58,JSON.stringify(mobileLayout));
+  await mobile.setViewportSize({width:360,height:640});
+  const compactLayout=await mobile.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth,height:document.documentElement.scrollHeight,viewportHeight:innerHeight,video:document.querySelector('#remote-media video').getBoundingClientRect().height,actions:document.querySelector('#share-btn').getBoundingClientRect().bottom}));
+  assert.ok(compactLayout.width<=compactLayout.viewport,JSON.stringify(compactLayout));
+  assert.ok(compactLayout.height<=compactLayout.viewportHeight,JSON.stringify(compactLayout));
+  assert.ok(compactLayout.video>100,JSON.stringify(compactLayout));
+  assert.ok(compactLayout.actions<=compactLayout.viewportHeight-58,JSON.stringify(compactLayout));
+  await mobile.setViewportSize({width:390,height:844});
+  assert.equal(await mobile.locator('#mobile-menu-btn').isVisible(),true);
+  await mobile.locator('#mobile-menu-btn').click();
+  await mobile.locator('.sidebar').waitFor({state:'visible'});
+  await mobile.locator('#mobile-drawer-scrim').click({position:{x:380,y:300}});
+  await mobile.locator('.sidebar').waitFor({state:'hidden'});
+  if(previewDir){await mobile.locator('#toast').waitFor({state:'hidden',timeout:8000});await mobile.screenshot({path:join(previewDir,'call-mobile.png')})}
   await pages[0].locator('#settings-btn').click();
   await pages[0].locator('#settings-tab-account').click();
   await pages[0].locator('#settings-sign-out').click();

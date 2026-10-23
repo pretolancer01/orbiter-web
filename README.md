@@ -4,6 +4,12 @@ Cliente independente de comunicação para Windows e navegador. O executável in
 
 Para testar o site no plano gratuito do Render, veja [RENDER.md](RENDER.md). A configuração de implantação está em `render.yaml`; os dados de teste podem ser perdidos quando o serviço reinicia.
 
+## Interface
+
+O início mostra comunidades e ações rápidas. Dentro de um canal de voz, a chamada ocupa a área principal; o chat abre pelo ícone ao lado do nome do canal. Em telas pequenas, use ☰ para abrir comunidades e canais e o botão de membros no cabeçalho para ver quem está na sala. As configurações concentram perfil, cores, personalização, testes de áudio e vídeo e saída da conta. O botão direito abre ações do Orbiter em comunidades, canais, pessoas, mensagens e na área de chamada; campos de texto preservam o menu de edição do navegador.
+
+Uma pessoa pode compartilhar a tela pelo computador e outra assistir no navegador do celular. O teste automatizado cobre a recepção de vídeo em um navegador mobile emulado; a reprodução em aparelhos físicos e redes diferentes ainda precisa de validação manual.
+
 ## Executar
 
 ```powershell
