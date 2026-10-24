@@ -2,7 +2,7 @@
 
 Orbiter é um protótipo independente de comunicação para navegador e Windows. Reúne comunidades, canais de texto e voz, mensagens e compartilhamento de tela. O aplicativo não acessa contas nem servidores do Discord.
 
-- **Acesse o site:** https://orbiter-web.onrender.com/
+- **Teste no navegador:** peça o endereço de acesso ao responsável pelo projeto. O ambiente online está reservado aos participantes dos testes.
 - **Para rodar no Windows ou desenvolver:** veja [Executar localmente](#executar-localmente).
 - **Para configurar o serviço online:** veja [RENDER.md](RENDER.md).
 
@@ -10,7 +10,7 @@ Orbiter é um protótipo independente de comunicação para navegador e Windows.
 
 ## Tutorial: primeira conversa
 
-1. **Crie uma conta.** Abra o [Orbiter no navegador](https://orbiter-web.onrender.com/), clique em **Criar conta** e preencha nome de exibição, nome de usuário, e-mail e senha. Se já tiver conta, use **Entrar**. O login com Google exige configuração adicional do operador e pode estar indisponível.
+1. **Crie uma conta.** Abra no navegador o endereço de teste recebido do responsável, clique em **Criar conta** e preencha nome de exibição, nome de usuário, e-mail e senha. Se já tiver conta, use **Entrar**. O login com Google exige configuração adicional do operador e pode estar indisponível.
 2. **Crie uma comunidade.** Clique no botão **＋** na barra de comunidades, escolha **Criar meu servidor**, dê um nome e confirme. O Orbiter cria um canal de texto `# geral` e um canal de voz. A opção **Aprovação manual** ainda está em desenvolvimento; para começar, use **Por convite**.
 3. **Convide outra pessoa.** Dentro da comunidade, clique em **⚙ Gerenciar servidor**, escolha **Gerar convite** e compartilhe o código. O convite gerado expira em 24 horas. A outra pessoa cria a própria conta, clica em **＋ → Entrar com convite** e cola o código. Um link só aparece quando o operador configura a URL de convites no servidor.
 4. **Troque mensagens.** Abra um canal de texto, escreva no campo **Mensagem** e envie. Use o botão de chat ao lado do canal para mostrar ou ocultar a conversa enquanto estiver em uma chamada.
