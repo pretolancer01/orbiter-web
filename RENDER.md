@@ -26,8 +26,8 @@ Abra `http://127.0.0.1:8890`. Para teste local, os dados padrão ficam em `data/
 
 ## Publicar
 
-1. Crie um repositório Git privado contendo o conteúdo desta pasta `app` como raiz. Não inclua `node_modules`, `dist` nem `data`.
-2. No Render, crie um Blueprint a partir desse repositório. Ele encontra `render.yaml` na raiz. Verifique que o plano exibido é **Free** e não há disco antes de criar.
+1. Use este repositório como fonte do serviço. `render.yaml` já está na raiz; não envie `node_modules`, `dist` nem `data`.
+2. No Render, crie um Blueprint a partir do repositório. Verifique que o plano exibido é **Free** e não há disco antes de criar.
 3. Depois da implantação, abra a URL `https://...onrender.com`, cadastre uma conta de teste e crie uma comunidade. Compartilhe essa URL com seu amigo; ele cria outra conta de teste e usa o convite da comunidade.
 
 O login Google permanece desabilitado no navegador até ter callback OAuth público e credenciais próprias. Microfone e captura de tela usam as permissões e o seletor do navegador. Para voz e tela entre redes diferentes, configure no Render `CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`; o backend fornece credenciais TURN temporárias ao navegador e ao executável. O serviço gratuito pode demorar a despertar após inatividade.
