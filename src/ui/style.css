@@ -268,3 +268,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .settings-brand{display:flex;align-items:center;gap:9px}
 .settings-brand:before{content:'';display:inline-block;width:27px;height:27px;flex:none;background:url('./orbiter-icon.png') center/contain no-repeat}
 @media(max-width:720px){.auth-side .logo{width:52px;height:52px}.home-glow span{display:none}}
+.settings-section .audio-settings .ptt-settings{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;padding:14px;border:1px solid #365a59;border-radius:12px;background:#102a31}
+.audio-settings .ptt-settings label{margin:0}
+.ptt-key-row{display:flex;flex-direction:column;gap:5px;align-items:flex-start;color:#d7e9e9;font-size:12px;font-weight:700}
+.audio-settings .ptt-key-row button{width:auto;min-width:120px;padding:7px 12px;border-color:var(--orbiter-accent,#8ee0c6);font-weight:700}
+.ptt-key-row small{color:#8eaaad;font-size:11px;font-weight:400;line-height:1.4}
+#mic-btn.active:not(.transmitting){background:#36565c;color:#e7f4f2;border-color:#6d9693}
+#mic-btn.transmitting{background:var(--orbiter-accent,#8ee0c6);color:#102d2e;border-color:transparent;box-shadow:0 0 0 3px #8ee0c62b}
+@media(max-width:700px){.settings-section .audio-settings .ptt-settings{grid-template-columns:1fr}}

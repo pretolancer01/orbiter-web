@@ -32,7 +32,7 @@ Abra `http://127.0.0.1:8890`. Para teste local, os dados padrão ficam em `data/
 
 O login Google permanece desabilitado no navegador até ter callback OAuth público e credenciais próprias. Microfone e captura de tela usam as permissões e o seletor do navegador. Para voz e tela entre redes diferentes, configure no Render `CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`; o backend fornece credenciais TURN temporárias ao navegador e ao executável. O serviço gratuito pode demorar a despertar após inatividade.
 
-O executável portátil `Orbiter 0.2.3.exe` abre a mesma conta e comunidades do site automaticamente. Não é necessário copiar a URL do Render para o computador. O login precisa ser feito uma vez também no executável.
+O executável portátil `Orbiter 0.2.5.exe` abre a mesma conta e comunidades do site automaticamente. Não é necessário copiar a URL do Render para o computador. O login precisa ser feito uma vez também no executável. Após uma queda do serviço, ele tenta reconectar automaticamente. O modo **Pressione para falar** fica em **Configurações → Áudio e vídeo** e transmite voz apenas durante o pressionamento da tecla escolhida, enquanto o Orbiter está em primeiro plano.
 
 ## Testar no celular
 

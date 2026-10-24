@@ -74,6 +74,24 @@ try{
   assert.equal(await pages[0].locator('#settings-modal').isVisible(),true);
   await pages[0].locator('#settings-tab-audio').click();
   assert.equal(await pages[0].locator('#settings-panel-audio').isVisible(),true);
+  await pages[0].locator('#mic-mode').selectOption('ptt');
+  assert.equal(await pages[0].evaluate(()=>window.__pcs[0].getSenders().find(s=>s.track?.kind==='audio')?.track.enabled),false);
+  await pages[0].locator('#ptt-key').click();
+  await pages[0].keyboard.press('b');
+  assert.equal(await pages[0].locator('#ptt-key').textContent(),'B');
+  await pages[0].locator('#settings-close').click();
+  await pages[0].keyboard.down('v');
+  assert.equal(await pages[0].evaluate(()=>window.__pcs[0].getSenders().find(s=>s.track?.kind==='audio')?.track.enabled),false);
+  await pages[0].keyboard.up('v');
+  await pages[0].keyboard.down('b');
+  assert.equal(await pages[0].evaluate(()=>window.__pcs[0].getSenders().find(s=>s.track?.kind==='audio')?.track.enabled),true);
+  await pages[0].evaluate(()=>window.dispatchEvent(new Event('blur')));
+  assert.equal(await pages[0].evaluate(()=>window.__pcs[0].getSenders().find(s=>s.track?.kind==='audio')?.track.enabled),false);
+  await pages[0].keyboard.up('b');
+  await pages[0].locator('#settings-btn').click();
+  await pages[0].locator('#settings-tab-audio').click();
+  await pages[0].locator('#mic-mode').selectOption('open');
+  assert.equal(await pages[0].evaluate(()=>window.__pcs[0].getSenders().find(s=>s.track?.kind==='audio')?.track.enabled),true);
   if(process.env.ORBITER_UI_PREVIEW){await pages[0].locator('#toast').waitFor({state:'hidden',timeout:7000});await pages[0].screenshot({path:resolve(process.env.ORBITER_UI_PREVIEW)})}
   const audioLayout=await pages[0].evaluate(()=>{const panel=document.querySelector('.settings-window').getBoundingClientRect();return {top:panel.top,bottom:panel.bottom,viewport:innerHeight}});
   assert.ok(audioLayout.top>=0&&audioLayout.bottom<=audioLayout.viewport);

@@ -21,7 +21,14 @@ try {
   const config = await page.evaluate(() => window.orbita.iceConfig());
   assert.ok(config.iceServers?.some(server => [server.urls].flat().some(url => url.startsWith('turn:') || url.startsWith('turns:'))));
   await page.locator('#auth').waitFor({ state: 'visible', timeout: 100000 });
-  console.log('Desktop online: URL, ícone, TURN e tela de login confirmados.');
+  await page.addInitScript(() => { const Native = WebSocket; window.__testSockets = []; window.WebSocket = class extends Native { constructor(...args) { super(...args); window.__testSockets.push(this); } }; });
+  await page.reload();
+  await page.locator('#auth-submit').waitFor({ state: 'visible', timeout: 100000 });
+  await page.waitForFunction(() => !document.querySelector('#auth-submit').disabled);
+  await page.evaluate(() => window.__testSockets.at(-1).close());
+  await page.waitForFunction(() => document.querySelector('#auth-submit').disabled);
+  await page.waitForFunction(() => !document.querySelector('#auth-submit').disabled, undefined, { timeout: 30000 });
+  console.log('Desktop online: URL, ícone, TURN, login e reconexão confirmados.');
 } finally {
   if (app) await app.close();
   await rm(profile, { recursive: true, force: true });

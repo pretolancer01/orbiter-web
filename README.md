@@ -6,7 +6,7 @@ Para testar o site no plano gratuito do Render, veja [RENDER.md](RENDER.md). A c
 
 ## Interface
 
-O início mostra comunidades e ações rápidas. Dentro de um canal de voz, a chamada ocupa a área principal; o chat abre pelo ícone ao lado do nome do canal. Em telas pequenas, use ☰ para abrir comunidades e canais e o botão de membros no cabeçalho para ver quem está na sala. As configurações concentram perfil, cores, personalização, testes de áudio e vídeo e saída da conta. O botão direito abre ações do Orbiter em comunidades, canais, pessoas, mensagens e na área de chamada; campos de texto preservam o menu de edição do navegador.
+O início mostra comunidades e ações rápidas. Dentro de um canal de voz, a chamada ocupa a área principal; o chat abre pelo ícone ao lado do nome do canal. Em telas pequenas, use ☰ para abrir comunidades e canais e o botão de membros no cabeçalho para ver quem está na sala. As configurações concentram perfil, cores, personalização, testes de áudio e vídeo e saída da conta. Em **Áudio e vídeo**, escolha **Pressione para falar** e defina uma tecla; depois ative o microfone no canal. A voz é enviada somente enquanto a tecla estiver pressionada. Essa tecla funciona com a janela do Orbiter em primeiro plano e não interrompe a digitação em campos de texto. O botão direito abre ações do Orbiter em comunidades, canais, pessoas, mensagens e na área de chamada; campos de texto preservam o menu de edição do navegador.
 
 Uma pessoa pode compartilhar a tela pelo computador e outra assistir no navegador do celular. O teste automatizado cobre a recepção de vídeo em um navegador mobile emulado; a reprodução em aparelhos físicos e redes diferentes ainda precisa de validação manual.
 
@@ -17,7 +17,7 @@ npm install
 npm start
 ```
 
-Para testar a lógica sem a interface: `npm test`. Para gerar um executável portátil: `npm run pack`. O arquivo fica em `dist/Orbiter 0.2.3.exe`. Basta baixá-lo e abrir no Windows; é necessária conexão com a internet. Como o serviço usa o plano gratuito do Render, a primeira abertura após inatividade pode demorar.
+Para testar a lógica sem a interface: `npm test`. Para gerar um executável portátil: `npm run pack`. O arquivo fica em `dist/Orbiter 0.2.5.exe`. Basta baixá-lo e abrir no Windows; é necessária conexão com a internet. Como o serviço usa o plano gratuito do Render, a primeira abertura após inatividade pode demorar. Se a conexão cair, o aplicativo tenta reconectar automaticamente e mantém o botão de login indisponível até o serviço voltar.
 
 Para usar outro servidor, defina `ORBITER_SERVER_URL=wss://seu-servidor` antes de abrir o executável. Para iniciar um servidor local junto com o executável, defina `ORBITER_LOCAL_SERVER=1`. O backend também pode ser iniciado separadamente com `npm run server`; por padrão, ele escuta apenas em `127.0.0.1`. Nesse modo, o arquivo persistente `orbiter.json` fica no diretório de dados configurado.
 

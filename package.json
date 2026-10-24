@@ -1,6 +1,6 @@
 {
   "name": "orbiter-desktop",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "private": true,
   "description": "Cliente independente de comunicação em tempo real",
   "main": "dist/main.cjs",
